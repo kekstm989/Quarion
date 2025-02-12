@@ -7,6 +7,8 @@ set "LOGFILE=%~dp0MoveMods.log"
 set "DESTINATION=%APPDATA%\.minecraft\mods"
 set "GIT_REPO=https://github.com/kekstm989/Quarion.git"
 set "CLONE_DIR=%~dp0QuarionRepo"
+set "GIT_INSTALLER=%~dp0GitInstaller.exe"
+set "GIT_DOWNLOAD=https://github.com/git-for-windows/git/releases/latest/download/Git-64-bit.exe"
 
 :: Очистка лога
 echo. > "%LOGFILE%"
@@ -35,11 +37,39 @@ if %errorlevel% neq 0 (
 :: Проверяем, установлен ли Git
 where git >nul 2>&1
 if %errorlevel% neq 0 (
-    echo Ошибка: Git не установлен!
-    echo Установите Git по ссылке: https://git-scm.com/downloads
-    echo [%date% %time%] Ошибка: Git не найден! >> "%LOGFILE%"
-    pause
-    exit /b
+    echo Git не найден! Начинаю установку...
+    echo [%date% %time%] Git не найден. Начинаю установку. >> "%LOGFILE%"
+
+    :: Скачиваем установщик Git
+    echo Скачивание Git...
+    powershell -Command "& {Invoke-WebRequest -Uri '%GIT_DOWNLOAD%' -OutFile '%GIT_INSTALLER%'}"
+
+    if not exist "%GIT_INSTALLER%" (
+        echo Ошибка: не удалось скачать Git!
+        echo [%date% %time%] Ошибка: не удалось скачать Git! >> "%LOGFILE%"
+        pause
+        exit /b
+    )
+
+    :: Устанавливаем Git тихо (без окна установки)
+    echo Установка Git...
+    start /wait %GIT_INSTALLER% /SILENT
+
+    if %errorlevel% neq 0 (
+        echo Ошибка при установке Git!
+        echo [%date% %time%] Ошибка при установке Git! >> "%LOGFILE%"
+        pause
+        exit /b
+    )
+
+    :: Удаляем установщик
+    del /Q "%GIT_INSTALLER%"
+
+    :: Добавляем Git в переменные среды (только для текущей сессии)
+    set "PATH=%ProgramFiles%\Git\bin;%PATH%"
+
+    echo Git успешно установлен!
+    echo [%date% %time%] Git успешно установлен. >> "%LOGFILE%"
 )
 
 :: Удаляем старую папку с репозиторием, если она есть
