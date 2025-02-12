@@ -72,30 +72,37 @@ Select language / Выберите язык:
 [1] English
 [2] Русский
 
-[1/8] Проверка, запущен ли Minecraft...
-[1/8] Minecraft не запущен. Продолжаем...
+[1/8] Checking if Minecraft is running...
+[1/8] Minecraft is not running. Continuing...
 
-[2/8] Проверка наличия Git...
-[2/8] Git установлен. Продолжаем...
+[2/8] Checking for Git...
+[2/8] Git is installed. Continuing...
 
-[3/8] Очистить папку mods перед установкой новых модов? (Y/N)
-Очистка завершена!
+[3/8] Do you want to clean the mods folder before installing? (Y/N)
+Cleaning mods folder...
+Cleaning completed!
 
-[4/8] Проверка кэша модов...
-Обновление существующего репозитория...
+[4/8] Checking cached mods...
+Updating repository...
+[4/8] Mods downloaded successfully!
 
-[5/8] Проверка установленных модов...
-Используется кешированный мод: OptiFine.jar
-Скачивание нового мода: JourneyMap.jar
+[5/8] Checking installed mods...
+Downloading new mod: Dungeon-Crawl-1.20.1-2.3.15.jar
+Downloading new mod: DungeonsArise-1.20.1-2.1.57-release.jar
+Downloading new mod: Terralith_1.20.x_v2.5.4.jar
 
-[6/8] Установлены следующие моды:
-- OptiFine.jar
-- JourneyMap.jar
-- TinkersConstruct.jar
+========================================================
+Installed mods:
+- Dungeon-Crawl-1.20.1-2.3.15.jar
+- DungeonsArise-1.20.1-2.1.57-release.jar
+- Terralith_1.20.x_v2.5.4.jar
+========================================================
+[7/8] Temporary files removed.
 
-[7/8] Временные файлы удалены.
-
-[8/8] Установка завершена успешно!
+========================================================
+Installation completed successfully!
+========================================================
+Press any key to continue . . .
 ```
 
 
