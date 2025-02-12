@@ -35,19 +35,29 @@ set /p LANG=
 if "%LANG%"=="1" (
     set "MSG_START=Starting installation..."
     set "MSG_MC_RUNNING=Minecraft is running! Please close the game before installing mods."
-    set "MSG_DONE=Operation completed successfully!"
+    set "MSG_DONE=Installation completed successfully!"
     set "MSG_CACHE=Using cached mod:"
     set "MSG_DOWNLOAD=Downloading new mod:"
     set "MSG_CLEAN=Do you want to clean the mods folder before installing? (Y/N)"
+    set "MSG_CLEAN_START=Cleaning mods folder..."
+    set "MSG_CLEAN_DONE=Cleaning completed!"
     set "MSG_GIT_INSTALL=Git is not installed! Installing now..."
+    set "MSG_CHECK_CACHE=Checking cached mods..."
+    set "MSG_CHECK_REPO=Checking and updating repository..."
+    set "MSG_FILES_DELETED=Temporary files removed."
 ) else (
     set "MSG_START=Запуск установки..."
     set "MSG_MC_RUNNING=Minecraft запущен! Закройте игру перед установкой модов."
-    set "MSG_DONE=Операция завершена успешно!"
+    set "MSG_DONE=Установка завершена успешно!"
     set "MSG_CACHE=Используется кешированный мод:"
     set "MSG_DOWNLOAD=Скачивание нового мода:"
     set "MSG_CLEAN=Очистить папку mods перед установкой новых модов? (Y/N)"
+    set "MSG_CLEAN_START=Очистка папки mods..."
+    set "MSG_CLEAN_DONE=Очистка завершена!"
     set "MSG_GIT_INSTALL=Git не установлен! Начинаю установку..."
+    set "MSG_CHECK_CACHE=Проверка кеша модов..."
+    set "MSG_CHECK_REPO=Проверка и обновление репозитория..."
+    set "MSG_FILES_DELETED=Временные файлы удалены."
 )
 
 echo ========================================================
