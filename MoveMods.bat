@@ -13,9 +13,20 @@ set "GIT_DOWNLOAD=https://github.com/git-for-windows/git/releases/latest/downloa
 :: Очистка лога (только ошибки будут записываться)
 echo. > "%LOGFILE%"
 
-:: Выбор языка
+:: Очищаем экран и выводим ASCII-арт
 cls
+echo ███╗   ██╗███████╗██╗  ██╗ ██████╗ ███╗   ██╗    ██████╗ ██████╗  ██████╗      ██╗███████╗ ██████╗████████╗
+echo ████╗  ██║██╔════╝╚██╗██╔╝██╔═══██╗████╗  ██║    ██╔══██╗██╔══██╗██╔═══██╗     ██║██╔════╝██╔════╝╚══██╔══╝
+echo ██╔██╗ ██║█████╗   ╚███╔╝ ██║   ██║██╔██╗ ██║    ██████╔╝██████╔╝██║   ██║     ██║█████╗  ██║        ██║   
+echo ██║╚██╗██║██╔══╝   ██╔██╗ ██║   ██║██║╚██╗██║    ██╔═══╝ ██╔══██╗██║   ██║██   ██║██╔══╝  ██║        ██║   
+echo ██║ ╚████║███████╗██╔╝ ██╗╚██████╔╝██║ ╚████║    ██║     ██║  ██║╚██████╔╝╚█████╔╝███████╗╚██████╗   ██║   
+echo ╚═╝  ╚═══╝╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═══╝    ╚═╝     ╚═╝  ╚═╝ ╚═════╝  ╚════╝ ╚══════╝ ╚═════╝   ╚═╝   
 echo ========================================================
+echo          АВТОМАТИЧЕСКАЯ УСТАНОВКА МОДОВ В .minecraft                  
+echo ========================================================
+echo.
+
+:: Выбор языка
 echo Select language / Выберите язык:
 echo [1] English
 echo [2] Русский
@@ -27,22 +38,24 @@ if "%LANG%"=="1" (
     set "MSG_DONE=Operation completed successfully!"
     set "MSG_CACHE=Using cached mod:"
     set "MSG_DOWNLOAD=Downloading new mod:"
-    set "MSG_CLONING=Cloning repository..."
+    set "MSG_CLEAN=Do you want to clean the mods folder before installing? (Y/N)"
+    set "MSG_GIT_INSTALL=Git is not installed! Installing now..."
 ) else (
     set "MSG_START=Запуск установки..."
     set "MSG_MC_RUNNING=Minecraft запущен! Закройте игру перед установкой модов."
     set "MSG_DONE=Операция завершена успешно!"
     set "MSG_CACHE=Используется кешированный мод:"
     set "MSG_DOWNLOAD=Скачивание нового мода:"
-    set "MSG_CLONING=Клонирование репозитория..."
+    set "MSG_CLEAN=Очистить папку mods перед установкой новых модов? (Y/N)"
+    set "MSG_GIT_INSTALL=Git не установлен! Начинаю установку..."
 )
 
 echo ========================================================
 echo %MSG_START%
 echo ========================================================
 
-:: Проверяем, запущен ли Minecraft
-echo [1/6] Проверка, запущен ли Minecraft...
+:: [1/8] Проверяем, запущен ли Minecraft
+echo [1/8] Проверка, запущен ли Minecraft...
 tasklist | find /i "javaw.exe" >nul
 if %errorlevel%==0 (
     echo Ошибка: %MSG_MC_RUNNING%
@@ -50,64 +63,39 @@ if %errorlevel%==0 (
     pause
     exit /b
 )
-echo [1/6] Minecraft не запущен. Продолжаем...
+echo [1/8] Minecraft не запущен. Продолжаем...
 echo.
 
-:: Проверяем подключение к интернету
-echo [2/6] Проверка подключения к интернету...
-ping -n 1 google.com >nul 2>&1
-if %errorlevel% neq 0 (
-    echo Ошибка: Интернет отсутствует! Проверьте подключение.
-    echo [%date% %time%] Ошибка: Нет интернета! >> "%LOGFILE%"
-    pause
-    exit /b
-)
-echo [2/6] Интернет в порядке! Продолжаем...
-echo.
-
-:: Проверяем, установлен ли Git
-echo [3/6] Проверка наличия Git...
+:: [2/8] Установка Git, если его нет
+echo [2/8] Проверка наличия Git...
 where git >nul 2>&1
 if %errorlevel% neq 0 (
-    echo Git не найден! Начинаю скачивание...
-    echo [%date% %time%] Ошибка: Git не найден! >> "%LOGFILE%"
-
-    :: Скачиваем установщик Git
+    echo %MSG_GIT_INSTALL%
     powershell -Command "& {Invoke-WebRequest -Uri '%GIT_DOWNLOAD%' -OutFile '%GIT_INSTALLER%'}"
-    if not exist "%GIT_INSTALLER%" (
-        echo Ошибка: не удалось скачать Git!
-        echo [%date% %time%] Ошибка: Сбой загрузки Git! >> "%LOGFILE%"
-        pause
-        exit /b
-    )
-
-    :: Устанавливаем Git в тихом режиме
-    echo Установка Git...
     start /wait %GIT_INSTALLER% /SILENT
-    if %errorlevel% neq 0 (
-        echo Ошибка при установке Git!
-        echo [%date% %time%] Ошибка: Git не установлен! >> "%LOGFILE%"
-        pause
-        exit /b
-    )
-
-    :: Удаляем установщик
     del /Q "%GIT_INSTALLER%"
-    
-    :: Добавляем Git в переменные среды (только для текущей сессии)
     set "PATH=%ProgramFiles%\Git\bin;%PATH%"
-
-    echo Git установлен успешно!
 )
-echo [3/6] Git установлен. Переходим к скачиванию модов...
+echo [2/8] Git установлен. Продолжаем...
 echo.
 
-:: Проверяем, нужно ли клонировать репозиторий (если есть, просто обновляем)
+:: [3/8] Очистка папки mods перед установкой (по желанию)
+echo [3/8] %MSG_CLEAN%
+set /p CLEAN_MODS=
+if /I "%CLEAN_MODS%"=="Y" (
+    echo Очистка папки mods...
+    del /Q "%DESTINATION%\*.jar" 2>nul
+    echo Очистка завершена!
+)
+echo.
+
+:: [4/8] Проверка кэша модов
+echo [4/8] Проверка кэша модов...
 if exist "%CLONE_DIR%" (
     echo Обновление существующего репозитория...
     cd "%CLONE_DIR%" && git pull >nul 2>&1
 ) else (
-    echo %MSG_CLONING%
+    echo Скачивание репозитория...
     git clone --depth=1 "%GIT_REPO%" "%CLONE_DIR%" >nul 2>&1
 )
 
@@ -117,11 +105,11 @@ if %errorlevel% neq 0 (
     pause
     exit /b
 )
-echo [4/6] Моды скачаны успешно!
+echo [4/8] Моды скачаны успешно!
 echo.
 
-:: Проверяем и скачиваем только отсутствующие моды
-echo [5/6] Проверка кеша модов...
+:: [5/8] Проверка установленных модов (кэширование)
+echo [5/8] Проверка установленных модов...
 for %%F in ("%CLONE_DIR%\QuarionMods\mods\*.jar") do (
     if exist "%DESTINATION%\%%~nxF" (
         echo %MSG_CACHE% %%~nxF
@@ -132,16 +120,18 @@ for %%F in ("%CLONE_DIR%\QuarionMods\mods\*.jar") do (
 )
 echo.
 
-:: Улучшенный список установленных модов
+:: [6/8] Вывод списка установленных модов
 echo ========================================================
 echo Установлены следующие моды:
 for %%F in ("%DESTINATION%\*.jar") do echo - %%~nF.jar
 echo ========================================================
 
-:: Удаляем папку с клонированным репозиторием
-rd /s /q "%CLONE_DIR%"
+:: [7/8] Удаление временных файлов
+rd /s /q "%CLONE_DIR%" >nul 2>&1
+echo [7/8] Временные файлы удалены.
+echo.
 
-:: Завершающее сообщение
+:: [8/8] Завершающее сообщение
 echo ========================================================
 echo %MSG_DONE%
 echo ========================================================
