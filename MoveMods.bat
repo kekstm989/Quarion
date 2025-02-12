@@ -10,36 +10,51 @@ set "CLONE_DIR=%~dp0QuarionRepo"
 set "GIT_INSTALLER=%~dp0GitInstaller.exe"
 set "GIT_DOWNLOAD=https://github.com/git-for-windows/git/releases/latest/download/Git-64-bit.exe"
 
-:: Очистка лога
+:: Очистка лога (только ошибки будут записываться)
 echo. > "%LOGFILE%"
 
-:: Очищаем экран и выводим ASCII-арт
+:: Выбор языка
 cls
-echo ███╗   ██╗███████╗██╗  ██╗ ██████╗ ███╗   ██╗    ██████╗ ██████╗  ██████╗      ██╗███████╗ ██████╗████████╗
-echo ████╗  ██║██╔════╝╚██╗██╔╝██╔═══██╗████╗  ██║    ██╔══██╗██╔══██╗██╔═══██╗     ██║██╔════╝██╔════╝╚══██╔══╝
-echo ██╔██╗ ██║█████╗   ╚███╔╝ ██║   ██║██╔██╗ ██║    ██████╔╝██████╔╝██║   ██║     ██║█████╗  ██║        ██║   
-echo ██║╚██╗██║██╔══╝   ██╔██╗ ██║   ██║██║╚██╗██║    ██╔═══╝ ██╔══██╗██║   ██║██   ██║██╔══╝  ██║        ██║   
-echo ██║ ╚████║███████╗██╔╝ ██╗╚██████╔╝██║ ╚████║    ██║     ██║  ██║╚██████╔╝╚█████╔╝███████╗╚██████╗   ██║   
-echo ╚═╝  ╚═══╝╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═══╝    ╚═╝     ╚═╝  ╚═╝ ╚═════╝  ╚════╝ ╚══════╝ ╚═════╝   ╚═╝   
 echo ========================================================
-echo          АВТОМАТИЧЕСКАЯ УСТАНОВКА МОДОВ В .minecraft                  
+echo Select language / Выберите язык:
+echo [1] English
+echo [2] Русский
+set /p LANG=
+
+if "%LANG%"=="1" (
+    set "MSG_START=Starting installation..."
+    set "MSG_MC_RUNNING=Minecraft is running! Please close the game before installing mods."
+    set "MSG_DONE=Operation completed successfully!"
+    set "MSG_CACHE=Using cached mod:"
+    set "MSG_DOWNLOAD=Downloading new mod:"
+    set "MSG_CLONING=Cloning repository..."
+) else (
+    set "MSG_START=Запуск установки..."
+    set "MSG_MC_RUNNING=Minecraft запущен! Закройте игру перед установкой модов."
+    set "MSG_DONE=Операция завершена успешно!"
+    set "MSG_CACHE=Используется кешированный мод:"
+    set "MSG_DOWNLOAD=Скачивание нового мода:"
+    set "MSG_CLONING=Клонирование репозитория..."
+)
+
 echo ========================================================
-echo.
+echo %MSG_START%
+echo ========================================================
 
 :: Проверяем, запущен ли Minecraft
-echo [1/7] Проверка, запущен ли Minecraft...
+echo [1/6] Проверка, запущен ли Minecraft...
 tasklist | find /i "javaw.exe" >nul
 if %errorlevel%==0 (
-    echo Ошибка: Minecraft запущен! Закройте игру перед установкой модов.
+    echo Ошибка: %MSG_MC_RUNNING%
     echo [%date% %time%] Ошибка: Minecraft был запущен во время установки! >> "%LOGFILE%"
     pause
     exit /b
 )
-echo [1/7] Minecraft не запущен. Продолжаем...
+echo [1/6] Minecraft не запущен. Продолжаем...
 echo.
 
 :: Проверяем подключение к интернету
-echo [2/7] Проверка подключения к интернету...
+echo [2/6] Проверка подключения к интернету...
 ping -n 1 google.com >nul 2>&1
 if %errorlevel% neq 0 (
     echo Ошибка: Интернет отсутствует! Проверьте подключение.
@@ -47,15 +62,15 @@ if %errorlevel% neq 0 (
     pause
     exit /b
 )
-echo [2/7] Интернет в порядке! Продолжаем...
+echo [2/6] Интернет в порядке! Продолжаем...
 echo.
 
 :: Проверяем, установлен ли Git
-echo [3/7] Проверка наличия Git...
+echo [3/6] Проверка наличия Git...
 where git >nul 2>&1
 if %errorlevel% neq 0 (
     echo Git не найден! Начинаю скачивание...
-    echo [%date% %time%] Git не найден, скачивание... >> "%LOGFILE%"
+    echo [%date% %time%] Ошибка: Git не найден! >> "%LOGFILE%"
 
     :: Скачиваем установщик Git
     powershell -Command "& {Invoke-WebRequest -Uri '%GIT_DOWNLOAD%' -OutFile '%GIT_INSTALLER%'}"
@@ -71,7 +86,7 @@ if %errorlevel% neq 0 (
     start /wait %GIT_INSTALLER% /SILENT
     if %errorlevel% neq 0 (
         echo Ошибка при установке Git!
-        echo [%date% %time%] Ошибка установки Git! >> "%LOGFILE%"
+        echo [%date% %time%] Ошибка: Git не установлен! >> "%LOGFILE%"
         pause
         exit /b
     )
@@ -83,43 +98,38 @@ if %errorlevel% neq 0 (
     set "PATH=%ProgramFiles%\Git\bin;%PATH%"
 
     echo Git установлен успешно!
-    echo [%date% %time%] Git установлен! >> "%LOGFILE%"
 )
-echo [3/7] Git установлен. Переходим к скачиванию модов...
+echo [3/6] Git установлен. Переходим к скачиванию модов...
 echo.
 
-:: Удаляем старую папку с репозиторием
-echo [4/7] Очистка старых данных...
-if exist "%CLONE_DIR%" rd /s /q "%CLONE_DIR%"
-echo [4/7] Готово!
-echo.
-
-:: Очистка папки mods перед установкой (по желанию)
-echo Очистить папку mods перед установкой новых модов? (Y/N)
-set /p CLEAN_MODS=
-if /I "%CLEAN_MODS%"=="Y" (
-    echo Очистка папки mods...
-    del /Q "%DESTINATION%\*.jar"
-    echo Очистка завершена!
+:: Проверяем, нужно ли клонировать репозиторий (если есть, просто обновляем)
+if exist "%CLONE_DIR%" (
+    echo Обновление существующего репозитория...
+    cd "%CLONE_DIR%" && git pull >nul 2>&1
+) else (
+    echo %MSG_CLONING%
+    git clone --depth=1 "%GIT_REPO%" "%CLONE_DIR%" >nul 2>&1
 )
-echo.
 
-:: Клонирование репозитория
-echo [5/7] Скачивание модов из GitHub...
-git clone --depth=1 "%GIT_REPO%" "%CLONE_DIR%" >nul 2>&1
 if %errorlevel% neq 0 (
     echo Ошибка при скачивании репозитория!
     echo [%date% %time%] Ошибка: Репозиторий не скачан! >> "%LOGFILE%"
     pause
     exit /b
 )
-echo [5/7] Моды скачаны успешно!
+echo [4/6] Моды скачаны успешно!
 echo.
 
-:: Копирование модов в .minecraft
-echo [6/7] Копирование модов...
-xcopy /Y /E "%CLONE_DIR%\QuarionMods\mods\*" "%DESTINATION%" >nul
-echo [6/7] Моды установлены!
+:: Проверяем и скачиваем только отсутствующие моды
+echo [5/6] Проверка кеша модов...
+for %%F in ("%CLONE_DIR%\QuarionMods\mods\*.jar") do (
+    if exist "%DESTINATION%\%%~nxF" (
+        echo %MSG_CACHE% %%~nxF
+    ) else (
+        echo %MSG_DOWNLOAD% %%~nxF
+        xcopy /Y "%%F" "%DESTINATION%" >nul
+    )
+)
 echo.
 
 :: Улучшенный список установленных модов
@@ -128,22 +138,18 @@ echo Установлены следующие моды:
 for %%F in ("%DESTINATION%\*.jar") do echo - %%~nF.jar
 echo ========================================================
 
-:: Записываем список модов в лог
-echo [%date% %time%] Установлены моды: >> "%LOGFILE%"
-for %%F in ("%DESTINATION%\*.jar") do echo - %%~nF.jar >> "%LOGFILE%"
-echo ======================================================== >> "%LOGFILE%"
-
 :: Удаляем папку с клонированным репозиторием
 rd /s /q "%CLONE_DIR%"
 
 :: Завершающее сообщение
 echo ========================================================
-echo Операция завершена успешно!
-echo Моды скачаны из GitHub и установлены в .minecraft\mods.
+echo %MSG_DONE%
 echo ========================================================
 
-:: Записываем в лог успешное завершение
-echo [%date% %time%] Операция завершена успешно. >> "%LOGFILE%"
+:: Записываем ошибки в лог, если были
+if %errorlevel% neq 0 (
+    echo [%date% %time%] Ошибка при установке модов! >> "%LOGFILE%"
+)
 
 :: Остановка перед закрытием
 pause
