@@ -45,6 +45,10 @@ if "%LANG%"=="1" (
     set "MSG_CHECK_CACHE=Checking cached mods..."
     set "MSG_CHECK_REPO=Checking and updating repository..."
     set "MSG_FILES_DELETED=Temporary files removed."
+    set "MSG_MC_NOT_RUNNING=Minecraft is not running. Continuing..."
+    set "MSG_GIT_FOUND=Git is installed. Continuing..."
+    set "MSG_MODS_DOWNLOADED=Mods downloaded successfully!"
+    set "MSG_TEMP_FILES_REMOVED=Temporary files removed."
 ) else (
     set "MSG_START=Запуск установки..."
     set "MSG_MC_RUNNING=Minecraft запущен! Закройте игру перед установкой модов."
@@ -58,6 +62,10 @@ if "%LANG%"=="1" (
     set "MSG_CHECK_CACHE=Проверка кеша модов..."
     set "MSG_CHECK_REPO=Проверка и обновление репозитория..."
     set "MSG_FILES_DELETED=Временные файлы удалены."
+    set "MSG_MC_NOT_RUNNING=Minecraft не запущен. Продолжаем..."
+    set "MSG_GIT_FOUND=Git установлен. Продолжаем..."
+    set "MSG_MODS_DOWNLOADED=Моды скачаны успешно!"
+    set "MSG_TEMP_FILES_REMOVED=Временные файлы удалены."
 )
 
 echo ========================================================
@@ -65,7 +73,7 @@ echo %MSG_START%
 echo ========================================================
 
 :: [1/8] Проверяем, запущен ли Minecraft
-echo [1/8] Проверка, запущен ли Minecraft...
+echo [1/8] %MSG_CHECK_CACHE%
 tasklist | find /i "javaw.exe" >nul
 if %errorlevel%==0 (
     echo Ошибка: %MSG_MC_RUNNING%
@@ -73,7 +81,7 @@ if %errorlevel%==0 (
     pause
     exit /b
 )
-echo [1/8] Minecraft не запущен. Продолжаем...
+echo [1/8] %MSG_MC_NOT_RUNNING%
 echo.
 
 :: [2/8] Установка Git, если его нет
@@ -86,26 +94,26 @@ if %errorlevel% neq 0 (
     del /Q "%GIT_INSTALLER%"
     set "PATH=%ProgramFiles%\Git\bin;%PATH%"
 )
-echo [2/8] Git установлен. Продолжаем...
+echo [2/8] %MSG_GIT_FOUND%
 echo.
 
 :: [3/8] Очистка папки mods перед установкой (по желанию)
 echo [3/8] %MSG_CLEAN%
 set /p CLEAN_MODS=
 if /I "%CLEAN_MODS%"=="Y" (
-    echo Очистка папки mods...
+    echo %MSG_CLEAN_START%
     del /Q "%DESTINATION%\*.jar" 2>nul
-    echo Очистка завершена!
+    echo %MSG_CLEAN_DONE%
 )
 echo.
 
 :: [4/8] Проверка кэша модов
-echo [4/8] Проверка кэша модов...
+echo [4/8] %MSG_CHECK_REPO%
 if exist "%CLONE_DIR%" (
-    echo Обновление существующего репозитория...
+    echo Updating repository...
     cd "%CLONE_DIR%" && git pull >nul 2>&1
 ) else (
-    echo Скачивание репозитория...
+    echo Cloning repository...
     git clone --depth=1 "%GIT_REPO%" "%CLONE_DIR%" >nul 2>&1
 )
 
@@ -115,30 +123,12 @@ if %errorlevel% neq 0 (
     pause
     exit /b
 )
-echo [4/8] Моды скачаны успешно!
+echo [4/8] %MSG_MODS_DOWNLOADED%
 echo.
-
-:: [5/8] Проверка установленных модов (кэширование)
-echo [5/8] Проверка установленных модов...
-for %%F in ("%CLONE_DIR%\QuarionMods\mods\*.jar") do (
-    if exist "%DESTINATION%\%%~nxF" (
-        echo %MSG_CACHE% %%~nxF
-    ) else (
-        echo %MSG_DOWNLOAD% %%~nxF
-        xcopy /Y "%%F" "%DESTINATION%" >nul
-    )
-)
-echo.
-
-:: [6/8] Вывод списка установленных модов
-echo ========================================================
-echo Установлены следующие моды:
-for %%F in ("%DESTINATION%\*.jar") do echo - %%~nF.jar
-echo ========================================================
 
 :: [7/8] Удаление временных файлов
 rd /s /q "%CLONE_DIR%" >nul 2>&1
-echo [7/8] Временные файлы удалены.
+echo [7/8] %MSG_TEMP_FILES_REMOVED%
 echo.
 
 :: [8/8] Завершающее сообщение
